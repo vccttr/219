@@ -1,0 +1,115 @@
+public class MarioGame {
+    public static void main(String[] args) {
+        // Создание экземпляра класса Game
+        Game game = new Game();
+        // Запуск игры
+        game.runGame();
+    }
+}
+
+// Класс Game отвечает за управление процессом игры
+class Game {
+    private JFrame frame;
+    private Canvas canvas;
+    private Keyboard keyboard;
+    private Mario mario;
+
+    public Game() {
+        frame = new JFrame("Super Mario");
+        frame.setSize(800, 600);
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        canvas = new Canvas();
+        canvas.setPreferredSize(new Dimension(800, 600));
+        canvas.setMaximumSize(new Dimension(800, 600));
+        canvas.setMinimumSize(new Dimension(800, 600));
+        canvas.setFocusable(true);
+        frame.add(canvas);
+        frame.pack();
+        frame.setVisible(true);
+
+        keyboard = new Keyboard();
+        mario = new Mario(canvas);
+    }
+
+    public void runGame() {
+        long lastTime = System.nanoTime();
+        double amountOfTicks = 60.0;
+        double nsPerTick = 1000000000 / amountOfTicks;
+        double delta = 0;
+        int frames = 0;
+        int ticks = 0;
+
+        while (frame.isVisible()) {
+            long now = System.nanoTime();
+            delta += (now - lastTime) / nsPerTick;
+            lastTime = now;
+            boolean shouldRender = true;
+
+            while (delta >= 1) {
+                tick();
+                ticks++;
+                delta--;
+            }
+
+            if (shouldRender) {
+                render();
+                frames++;
+            }
+        }
+
+        System.out.println("FPS: " + frames + ", Ticks: " + ticks);
+    }
+
+    private void tick() {
+        // Обработка ввода пользователя
+        keyboard.tick();
+        // Обновление состояния мира игры
+        mario.update();
+    }
+
+    private void render() {
+        // Рендеринг текущего состояния мира игры
+        mario.render(canvas.getGraphics());
+    }
+}
+
+// Класс Keyboard отвечает за обработку ввода с клавиатуры
+class Keyboard {
+    private boolean[] keys = new boolean[65536];
+
+    public void tick() {
+        keys = KeyboardFocusManager.getCurrentKeyboardFocusOwner().getParent().getGraphicsConfiguration().getDevice().getKeyboard().getBufferedKeyStates();
+    }
+
+    public boolean isKeyDown(int keyCode) {
+        return keys[keyCode];
+    }
+}
+
+// Класс Mario отвечает за управление персонажем Марио
+class Mario {
+    private Canvas canvas;
+    private Image image;
+    private int x, y;
+
+    public Mario(Canvas canvas) {
+        this.canvas = canvas;
+        x = canvas.getWidth() / 2;
+        y = canvas.getHeight() / 2;
+        image = createImage(new MemoryImageSource(16, 16, Color.white, 1));
+    }
+
+    public void update() {
+        // Здесь должна быть логика движения Марио
+    }
+
+    public void render(Graphics g) {
+        g.drawImage(image, x - 8, y - 8, null);
+    }
+
+    private Image createImage(MemoryImageSource mis) {
+        return Toolkit.getDefaultToolkit().createImage(mis.getData().getData());
+    }
+}
